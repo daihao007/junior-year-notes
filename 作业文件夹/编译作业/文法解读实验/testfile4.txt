@@ -1,0 +1,44 @@
+int main()
+{
+    printf("24373468\n");
+
+    int i = 0;
+    int sum = 0;
+
+    if (i == 0)
+    {
+        sum = 1;
+    }
+
+    if (sum > 0)
+    {
+        sum = sum + 1;
+    }
+    else
+    {
+        sum = 0;
+    }
+
+    while (i < 10)
+    {
+        i = i + 1;
+
+        if (i == 3)
+        {
+            continue;
+        }
+
+        if (i == 8)
+        {
+            break;
+        }
+
+        sum = sum + i;
+    }
+
+    printf("%d\n", i);
+
+    printf("%d\n", sum);
+
+    return 0;
+}

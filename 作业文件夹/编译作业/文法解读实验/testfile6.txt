@@ -1,0 +1,78 @@
+int calls = 0;
+
+int touch()
+{
+    calls = calls + 1;
+    return 1;
+}
+
+int main()
+{
+    printf("24373468\n");
+
+    int a = 20;
+    int b = 6;
+
+    int add = a + b;
+
+    int sub = a - b;
+
+    int mul = a * b;
+
+    int div = a / b;
+
+    int mod = a % b;
+
+    int value = (a + b) * 2;
+
+    int positive = +a;
+
+    int negative = -b;
+
+    int flag = 0;
+
+    if (!flag)
+    {
+        flag = 1;
+    }
+
+    char ch = 'A';
+
+    int num = (int)ch;
+
+    char c2 = (char)66;
+
+    printf("%d %d %d\n", add, sub, mul);
+
+    printf("%d %d %d\n", div, mod, value);
+
+    printf("%d %d\n", positive, negative);
+
+    printf("%d\n", num);
+
+    printf("%c\n", c2);
+
+    if (0 && touch())
+    {
+        flag = flag + 100;
+    }
+
+    if (1 || touch())
+    {
+        flag = flag + 0;
+    }
+
+    if (1 && touch())
+    {
+        flag = flag + 0;
+    }
+
+    if (0 || touch())
+    {
+        flag = flag + 0;
+    }
+
+    printf("%d\n", calls);
+
+    return 0;
+}

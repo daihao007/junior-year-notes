@@ -1,0 +1,41 @@
+const int A=1,B=2,C=3;
+int b,d,e;
+void print(){
+    printf("hello\n");
+    return;
+}
+int add (int a,int b,int c){
+    return a + b + c;
+}
+char getChar(char c){
+    return c;
+}
+int sum(int arr[]){
+    return arr[0];
+}
+void empty()
+{
+
+}
+int addOne(int x)
+{
+    return x+1;
+}
+int main(){
+    static int count = 0;
+    printf("24373468\n");
+    print();
+    int x = add(1, 2, 3);
+    char c = getChar('c');
+    int arr[3] = {1, 2, 3};
+    int m = sum(arr);
+    int y = addOne(arr[0]);
+    ;
+    printf("%d\n", y);
+    printf("%d\n", x);
+
+    printf("%c\n", c);
+
+    printf("%d\n", m);
+    return 0;
+}
