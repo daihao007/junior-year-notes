@@ -1,0 +1,37 @@
+{
+  "assignment": "词法分析",
+  "session_id": "01a110ca-211e-7ac2-bb17-5ba42853422e",
+  "source_session_filename": "rollout-2026-10-06T18-37-24-01a110ca-211e-7ac2-bb17-5ba42853422e.jsonl",
+  "conversation_first_timestamp_utc": "2026-10-06T10:37:27.285Z",
+  "conversation_cutoff_timestamp_utc": "2026-10-06T13:35:25.383Z",
+  "exported_at_beijing": "2026-10-06T21:46:36+08:00",
+  "message_count": 45,
+  "role_counts": {
+    "user": 22,
+    "assistant": 23
+  },
+  "attachment_count": 1,
+  "redactions": [],
+  "secret_scan": "No common token/key patterns matched in exported message text; this does not guarantee detection of every private value.",
+  "source_snapshot_sha256": {
+    "config.json": "37716884f09370a9d2fc19aad87d0cd3f5fbfa087c767fb5271ece4825eafbbc",
+    "lexer.c": "3872d6eddc9d0f00c3942c798af71c9565f5e4deb0d37ad5f39f015583b87761"
+  },
+  "existing_code_zip": "lexer.zip",
+  "snapshot_matches_existing_code_zip": {
+    "config.json": true,
+    "lexer.c": true
+  },
+  "config": {
+    "programmingLanguage": "C",
+    "objectCode": "MIPS"
+  },
+  "excluded_record_types": [
+    "system/developer instructions",
+    "internal reasoning",
+    "tool traces",
+    "environment/UI metadata",
+    "messages after cutoff"
+  ],
+  "validation_scope": "Source and submission ZIP compared by SHA-256. No compilation, execution or platform evaluation performed for this export."
+}
