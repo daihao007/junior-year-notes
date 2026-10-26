@@ -1,0 +1,374 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>02_函数地图与解析原理</title><style>body{max-width:960px;margin:40px auto;padding:0 28px;color:#172331;font:17px/1.8 "Microsoft YaHei",sans-serif}h1,h2,h3{line-height:1.4;color:#153d62}h2{margin-top:2em;border-bottom:1px solid #ccd7e1;padding-bottom:.3em}pre{background:#f2f5f8;padding:16px;border:1px solid #d7e0e8;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 Consolas,monospace}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%;font-size:15px}th,td{padding:8px;border:1px solid #ccd7e1;text-align:left;vertical-align:top}th{background:#eef3f7}a{color:#175ea0}@media print{body{margin:0;max-width:none;font-size:11pt}pre{font-size:9pt}h1,h2,h3{break-after:avoid}tr{break-inside:avoid}thead{display:table-header-group}}</style><nav><a href="00_先看这里.html">00_先看这里</a> | <a href="01_考场命令与排错.html">01_考场命令与排错</a> | <a href="02_函数地图与解析原理.html">02_函数地图与解析原理</a> | <a href="03_新增文法实战.html">03_新增文法实战</a> | <a href="04_考场速查.html">04_考场速查</a> | <a href="函数定位表.html">函数定位表</a></nav><h1 id="_1">从源代码到输出：函数到底负责什么</h1>
+<p>以下以随附 starter 的代码为准。它来自你的语法分析版本。定位时在编辑器按 Ctrl+F 搜索函数名，完整行号表见《函数定位表》。</p>
+<h2 id="1">1. 文件分工</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>负责什么</th>
+<th>新增文法时通常是否要改</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>parser.c</td>
+<td>main、词法扫描、词法类别判断、全部递归下降函数</td>
+<td>最常修改</td>
+</tr>
+<tr>
+<td>token.h / token.c</td>
+<td>Token/TokenList 定义，保存和释放 token</td>
+<td>通常不改</td>
+</tr>
+<tr>
+<td>syntax_tree.h / syntax_tree.c</td>
+<td>树节点、释放、后序输出语法树</td>
+<td>新增输出规则时检查</td>
+</tr>
+<tr>
+<td>error_list.h / error_list.c</td>
+<td>保存错误，按行排序并写 error.txt</td>
+<td>新错误一般直接调用 addError</td>
+</tr>
+<tr>
+<td>CMakeLists.txt</td>
+<td>告诉 CMake 编译哪些文件</td>
+<td>新增 .c 文件时才需增加</td>
+</tr>
+<tr>
+<td>config.json</td>
+<td>原作业的平台配置</td>
+<td>考试若有提交要求，按试卷核对</td>
+</tr>
+</tbody>
+</table>
+<p><strong>当前 token 类别用字符串存储，没有 TokenType 枚举。</strong> 新增 <code>DOTK</code> 不用往 token.h 增加枚举值；要保证词法产生的字符串和 parser 检查的字符串完全一致。</p>
+<h2 id="2">2. 数据结构：先认清四个“容器”</h2>
+<p><code>Token</code> 的 <code>type</code> 是类别（如 INTTK），<code>value</code> 是原文（如 int），<code>line</code> 是源程序行号。<code>TokenList.data</code> 是 token 数组，<code>size</code> 是已经保存的个数，<code>capacity</code> 是已分配容量。</p>
+<p><code>Parser.pos</code> 指向<strong>下一个待解析 token</strong>，不是字符位置。<code>Parser.tokens</code> 指向 token 数组；<code>Parser.errors</code> 指向错误表；<code>Parser.nodes</code> 是暂存树根的栈；<code>memoryError</code> 表示无法继续的内存错误。</p>
+<p><code>SyntaxNode</code> 有终结符和非终结符两种。终结符指向真实 Token，非终结符如 Stmt、Exp 有 children。树中的 token 指针借用 TokenList 的数据，所以最后应先释放树，再释放 token。</p>
+<p><code>ParserMark</code> 保存三个数量：pos、nodeCount、errorCount。它代表“开始尝试某条文法前的状态”。</p>
+<h2 id="3">3. 程序主流程</h2>
+<pre><code class="language-text">main
+ ├─ 打开 testfile.txt、lexer.txt
+ ├─ 按字符扫描 → getWordType / getSingleCharType / getDoubleCharType
+ │                → addToken → lexer.txt
+ ├─ 初始化 Parser → parseCompUnit
+ │                   ├─ parseDecl
+ │                   ├─ parseFuncDef
+ │                   └─ parseMainFuncDef → parseBlock → parseBlockItem
+ │                                                     ├─ parseDecl
+ │                                                     └─ parseStmt
+ ├─ writeErrorOutput → error.txt
+ ├─ 成功且无规定错误时 writeParserOutput → parser.txt
+ └─ freeParserTrees、freeTokenList、freeErrorList
+</code></pre>
+<p><code>main</code> 里词法扫描是一整段循环，没有单独的 <code>lex()</code> 函数。因此新增字符识别，必须同时检查该循环和 get...Type 函数。</p>
+<h2 id="4">4. 最常用的工具函数</h2>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>做什么</th>
+<th>是否推进 pos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>currentToken</td>
+<td>返回当前 Token 指针，读完返回 NULL</td>
+<td>否</td>
+</tr>
+<tr>
+<td>checkToken</td>
+<td>当前 token 类别是否相等</td>
+<td>否</td>
+</tr>
+<tr>
+<td>checkTokenAt</td>
+<td>查看 pos + offset 的类别</td>
+<td>否</td>
+</tr>
+<tr>
+<td>checkNextToken</td>
+<td>等价于 checkTokenAt(..., 1, ...)</td>
+<td>否</td>
+</tr>
+<tr>
+<td>advanceToken</td>
+<td>消费当前 token，同时创建并压入终结符节点</td>
+<td>是，成功时 +1</td>
+</tr>
+<tr>
+<td>matchToken</td>
+<td>类型正确才 advanceToken；否则返回 0</td>
+<td>匹配成功才推进</td>
+</tr>
+<tr>
+<td>expectToken</td>
+<td>匹配则消费；缺失则记规定错误并恢复</td>
+<td>缺失时不推进</td>
+</tr>
+<tr>
+<td>markParser</td>
+<td>保存当前位置、节点数量和错误数量</td>
+<td>否</td>
+</tr>
+<tr>
+<td>rollbackParser</td>
+<td>释放新建树，恢复位置，并撤回此次尝试的错误</td>
+<td>回到 mark</td>
+</tr>
+<tr>
+<td>finishNode</td>
+<td>把 mark 后生成的子树收进一个非终结符，压回栈</td>
+<td>否</td>
+</tr>
+<tr>
+<td>pushParserNode</td>
+<td>节点栈扩容并入栈，分配失败设置 memoryError</td>
+<td>否</td>
+</tr>
+<tr>
+<td>freeParserTrees</td>
+<td>释放栈中剩余树及栈数组</td>
+<td>清理阶段</td>
+</tr>
+<tr>
+<td>isExpStart</td>
+<td>判断当前 token 能否开始表达式</td>
+<td>否</td>
+</tr>
+</tbody>
+</table>
+<p>返回 1 通常表示识别成功，0 表示失败。<strong>expectToken 返回 1 也可能表示已经记录缺失错误并成功恢复</strong>，不等于输入完全正确。</p>
+<p>不要用 <code>parser-&gt;pos++</code> 代替 advanceToken：前者不会创建树节点，最终输出会漏 token。不要只恢复 pos：树和错误也必须恢复。不要在 checkToken 之后又重复消费两次。</p>
+<h2 id="5-return-1">5. 用 return 1; 理解节点栈</h2>
+<ol>
+<li>parseStmt 保存 start。</li>
+<li>matchToken 消费 return，栈中加入 RETURNTK 节点。</li>
+<li>parseExp 逐层调用 AddExp → MulExp → UnaryExp → PrimaryExp → Number，消费 1。</li>
+<li>每层 finishNode 把刚生成的子树包装为对应的非终结符。</li>
+<li>expectToken 消费分号。</li>
+<li>finishNode(parser, start, "Stmt") 把 return、Exp、分号一起放进 Stmt。</li>
+</ol>
+<p><code>finishNode</code> 的名字就是输出中的 <code>&lt;Stmt&gt;</code>。不要为了方便临时命名为 <code>DoStmt</code>，除非试卷新增了这个非终结符并要求其输出。</p>
+<h2 id="6">6. 所有语法函数按职责归类</h2>
+<h3 id="_2">顶层与函数</h3>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>parseCompUnit</td>
+<td>按顺序解析全局声明、普通函数、main，最后要求没有剩余 token</td>
+</tr>
+<tr>
+<td>isGlobalDeclStart</td>
+<td>通过关键字和前看区分全局变量与函数</td>
+</tr>
+<tr>
+<td>isFuncDefStart</td>
+<td>判断类型、标识符、左括号是否组成普通函数开头</td>
+</tr>
+<tr>
+<td>parseFuncType</td>
+<td>void/int/char 返回类型</td>
+</tr>
+<tr>
+<td>parseFuncDef</td>
+<td>返回类型、名字、参数表、函数体</td>
+</tr>
+<tr>
+<td>parseMainFuncDef</td>
+<td>int main() Block</td>
+</tr>
+<tr>
+<td>parseFuncFParams</td>
+<td>逗号分隔的形参列表</td>
+</tr>
+<tr>
+<td>parseFuncFParam</td>
+<td>单个形参的类型、名字、可选 []</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_3">声明与初始化</h3>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>parseDecl</td>
+<td>常量声明或变量声明</td>
+</tr>
+<tr>
+<td>parseBType</td>
+<td>int 或 char</td>
+</tr>
+<tr>
+<td>parseConstDecl</td>
+<td>const 类型、一个或多个常量定义、分号</td>
+</tr>
+<tr>
+<td>parseConstDef</td>
+<td>常量名字、可选数组长度、等号和初值</td>
+</tr>
+<tr>
+<td>parseConstInitVal</td>
+<td>常量表达式、花括号列表或字符串</td>
+</tr>
+<tr>
+<td>parseVarDecl</td>
+<td>可选 static、类型、变量定义列表、分号</td>
+</tr>
+<tr>
+<td>parseVarDef</td>
+<td>变量名字、可选数组长度、可选初值</td>
+</tr>
+<tr>
+<td>parseInitVal</td>
+<td>表达式、花括号列表或字符串</td>
+</tr>
+</tbody>
+</table>
+<p>注意声明的 <code>[ConstExp]</code> 中，文法里的方括号是<strong>实际数组符号</strong>时会加引号；文法外层的 <code>[ ... ]</code> 才代表可选。读题时不要混淆。</p>
+<h3 id="_4">语句</h3>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>parseBlock</td>
+<td><code>{</code>、若干 BlockItem、<code>}</code>；循环直到右花括号</td>
+</tr>
+<tr>
+<td>parseBlockItem</td>
+<td>看开头判断声明还是语句</td>
+</tr>
+<tr>
+<td>parseStmt</td>
+<td>block/if/while/switch/跳转/printf/return/空语句/赋值/表达式语句分派</td>
+</tr>
+<tr>
+<td>parseCaseStmt</td>
+<td>case Number : 或 default : 后的语句序列</td>
+</tr>
+</tbody>
+</table>
+<p>新增有关键字开头的语句，一般放进 parseStmt，在最后尝试赋值/表达式之前。新增声明关键字，则要检查 parseDecl、parseBlockItem、isGlobalDeclStart 等所有入口。</p>
+<h3 id="_5">表达式：调用越深，结合越紧</h3>
+<pre><code class="language-text">Cond → LOrExp → LAndExp → EqExp → RelExp → AddExp → MulExp → UnaryExp → PrimaryExp
+Exp  ─────────────────────────────────→ AddExp
+ConstExp ─────────────────────────────→ AddExp
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>函数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>parseLOrExp</td>
+<td><code>||</code></td>
+</tr>
+<tr>
+<td>parseLAndExp</td>
+<td><code>&amp;&amp;</code></td>
+</tr>
+<tr>
+<td>parseEqExp</td>
+<td><code>== !=</code></td>
+</tr>
+<tr>
+<td>parseRelExp</td>
+<td><code>&lt; &gt; &lt;= &gt;=</code></td>
+</tr>
+<tr>
+<td>parseAddExp</td>
+<td><code>+ -</code></td>
+</tr>
+<tr>
+<td>parseMulExp</td>
+<td><code>* / %</code></td>
+</tr>
+<tr>
+<td>parseUnaryExp</td>
+<td>一元运算、函数调用、强制转换、基本表达式</td>
+</tr>
+<tr>
+<td>parseUnaryOp</td>
+<td>一元 <code>+ - !</code></td>
+</tr>
+<tr>
+<td>parsePrimaryExp</td>
+<td><code>(Exp)</code>、LVal、Number</td>
+</tr>
+<tr>
+<td>parseLVal</td>
+<td>标识符和可选数组下标</td>
+</tr>
+<tr>
+<td>parseNumber</td>
+<td>整数或字符常量</td>
+</tr>
+<tr>
+<td>parseFuncRParams</td>
+<td>逗号分隔的实参表达式</td>
+</tr>
+<tr>
+<td>parseExp / parseCond / parseConstExp</td>
+<td>分别调用对应表达式入口并包装节点</td>
+</tr>
+</tbody>
+</table>
+<p>原文法 Exp 不是 Cond，所以不能为了让 <code>1 &lt; 2</code> 出现在所有表达式位置而随意把 parseExp 改成 parseCond。新增运算符先确定试卷规定的优先级和出现范围。</p>
+<p><code>AddExp → AddExp '+' MulExp | MulExp</code> 是左递归，不能直接在 parseAddExp 开头再调 parseAddExp，否则无限递归。现有实现先读一个 MulExp，再循环读 <code>+/- MulExp</code>，每轮 finishNode 包装已有左子树，保持左结合，例如 <code>8-3-1</code> 是 <code>(8-3)-1</code>。</p>
+<h2 id="7">7. 词法函数与扫描循环</h2>
+<ul>
+<li>getWordType：完整读取一个标识符后查关键字表；未命中返回 IDENFR。新增 <code>for</code> 后，<code>format</code> 仍应是标识符。</li>
+<li>getSingleCharType：映射 <code>+</code>、<code>;</code>、<code>(</code> 等单字符。</li>
+<li>getDoubleCharType：映射 <code>== != &lt;= &gt;= &amp;&amp; ||</code>。</li>
+<li>main 扫描循环：处理空白、换行、字符、字符串、标识符、整数、注释、双字符和单字符。</li>
+<li>addToken：复制 token 的字面值，加入动态数组。</li>
+<li>initTokenList/freeTokenList：初始化/释放数组和字面值。</li>
+</ul>
+<p>新增 <code>+=</code> 时，只改 getDoubleCharType 不够：main 当前只对 <code>= ! &lt; &gt; &amp; |</code> 尝试读取第二个字符，还必须把 <code>+</code> 加入候选字符集合。</p>
+<p>新增 <code>/=</code> 要注意斜杠先经过注释识别；新分支不能破坏 <code>//</code>、<code>/* */</code> 和原除法。三字符运算符不能简单塞进双字符函数，要设计最多三字符前看和未使用字符退回，遵守最长匹配。</p>
+<h2 id="8">8. 输出与错误模块</h2>
+<ul>
+<li>createTokenNode / createNonterminalNode：创建终结符/非终结符。</li>
+<li>addChild：通用追加子节点工具；现有 parser 的 finishNode 直接转移子树数组，不必再调它。</li>
+<li>freeSyntaxTree：递归释放树。</li>
+<li>shouldOutputNonterminal：目前不输出 Decl、BType、BlockItem，但它们仍存在树中。</li>
+<li>writeNode：先子节点后父节点，生成语法分析规定的后序文本。</li>
+<li>writeParserOutput：管理文件开关与写文件。</li>
+<li>initErrorList / addError / freeErrorList：错误表生命周期。</li>
+<li>sortErrors：稳定按行号升序排序，同一行保留原记录顺序。</li>
+<li>writeErrorOutput：排序并输出 <code>行号 类别码</code>。</li>
+</ul>
+<h2 id="9">9. 错误处理最容易失分的地方</h2>
+<p>旧规则：a 为单独 &amp;/|；i 缺分号；j 缺右圆括号；k 缺右方括号。新题若增加或修改错误，按试卷的码、行号、恢复策略实现，不能自行发明错误码。</p>
+<pre><code class="language-c">if (!expectToken(parser, &quot;SEMICN&quot;, 'i')) {
+    rollbackParser(parser, start);
+    return 0;
+}
+</code></pre>
+<p>输入 <code>return 1</code> 后下一行是 <code>}</code>：当前 token 为 <code>}</code>，expectToken 发现缺分号，记录前一个真实 token（1）的行号，保留 <code>}</code> 给 parseBlock 消费。它<strong>没有</strong>真的插入分号节点，也没有跳过 <code>}</code>。</p>
+<p>matchToken 匹配失败只表示这条路径不成立，不会自动报错。expectToken 用在题目允许补缺恢复的位置，不能把所有 matchToken 一律替换为 expectToken，否则会接受错误结构，甚至导致不前进的死循环。</p>
+<p>赋值与表达式共用开头，例如 <code>a[1] = 2;</code> 和 <code>a[1] + 2;</code>。当前 parseStmt 先尝试 LVal，看到 <code>=</code> 才进入赋值；否则 rollback 到 start，再按 Exp 重读。这也是为什么试探产生的错误必须一起撤回，否则同一个缺 <code>]</code> 可能报两次。</p>
+<p>错误恢复之后，外层仍可能彻底失败并 rollback，导致这次尝试的错误被撤销。设计新规则时必须保证剩余结构可以继续读完；不要把“调用过 addError”当成最终 error.txt 一定会有该错误。</p></html>

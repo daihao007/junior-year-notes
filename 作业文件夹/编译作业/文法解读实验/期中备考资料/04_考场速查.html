@@ -1,0 +1,78 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>04_考场速查</title><style>body{max-width:960px;margin:40px auto;padding:0 28px;color:#172331;font:17px/1.8 "Microsoft YaHei",sans-serif}h1,h2,h3{line-height:1.4;color:#153d62}h2{margin-top:2em;border-bottom:1px solid #ccd7e1;padding-bottom:.3em}pre{background:#f2f5f8;padding:16px;border:1px solid #d7e0e8;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 Consolas,monospace}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%;font-size:15px}th,td{padding:8px;border:1px solid #ccd7e1;text-align:left;vertical-align:top}th{background:#eef3f7}a{color:#175ea0}@media print{body{margin:0;max-width:none;font-size:11pt}pre{font-size:9pt}h1,h2,h3{break-after:avoid}tr{break-inside:avoid}thead{display:table-header-group}}</style><nav><a href="00_先看这里.html">00_先看这里</a> | <a href="01_考场命令与排错.html">01_考场命令与排错</a> | <a href="02_函数地图与解析原理.html">02_函数地图与解析原理</a> | <a href="03_新增文法实战.html">03_新增文法实战</a> | <a href="04_考场速查.html">04_考场速查</a> | <a href="函数定位表.html">函数定位表</a></nav><h1 id="_1">考场速查</h1>
+<h2 id="_2">开场先完成三件事</h2>
+<ol>
+<li>确认试卷要求的 token 类别码、输出文件名、非终结符输出规则与错误码。</li>
+<li>备份自己的源代码，进入正确项目目录，用最小旧样例编译运行一次。</li>
+<li>在纸上列出新规则涉及的词法、入口、子函数、恢复点，逐项修改。</li>
+</ol>
+<h2 id="powershell-starter-examples">PowerShell 常用命令（starter 和 examples）</h2>
+<pre><code class="language-powershell">gcc -Wall -Wextra -std=c11 parser.c token.c syntax_tree.c error_list.c -o compiler.exe
+$LASTEXITCODE
+.\compiler.exe
+$LASTEXITCODE
+Get-Content .\error.txt
+Get-Content .\parser.txt
+</code></pre>
+<p>编译失败就停止，不能运行旧 exe。只改 testfile.txt 不用重新编译；改 .c/.h 必须编译。退出码为 0 不代替检查输出。</p>
+<pre><code class="language-powershell">cmake -B build -S . -G Ninja
+cmake --build build
+.\build\compiler.exe
+</code></pre>
+<p>在含 testfile.txt 的项目根目录运行。使用 CLion Run 时也要设置 Working directory。cmd 查看状态用 <code>echo %ERRORLEVEL%</code>，看文件用 <code>type error.txt</code>。</p>
+<h2 id="_3">修改位置口诀</h2>
+<table>
+<thead>
+<tr>
+<th>要做什么</th>
+<th>去哪里</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新关键字</td>
+<td>parser.c → getWordType</td>
+</tr>
+<tr>
+<td>新符号</td>
+<td>getSingleCharType / getDoubleCharType + main 扫描循环</td>
+</tr>
+<tr>
+<td>新语句</td>
+<td>parseStmt，放在通用赋值/表达式之前</td>
+</tr>
+<tr>
+<td>新表达式开头</td>
+<td>对应表达式层 + isExpStart</td>
+</tr>
+<tr>
+<td>新类型/声明</td>
+<td>类型与声明函数 + 所有判断声明起始的入口</td>
+</tr>
+<tr>
+<td>输出多了/少了非终结符</td>
+<td>finishNode 名称和次数 + shouldOutputNonterminal</td>
+</tr>
+<tr>
+<td>缺分号/右括号/右方括号</td>
+<td>expectToken，旧码分别 i/j/k</td>
+</tr>
+<tr>
+<td>只想查看下一个 token</td>
+<td>checkNextToken/checkTokenAt，不能 advanceToken</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_4">四个必须记住的区别</h2>
+<ul>
+<li>checkToken：只看。matchToken：正确才吃。advanceToken：吃并建节点。</li>
+<li>expectToken：缺失也可能返回成功，记录前一真实 token 行号，不吃当前 token。</li>
+<li>markParser/rollbackParser：一起保存/恢复位置、树节点、错误记录。</li>
+<li>finishNode：收集本规则的孩子，生成试卷规定的非终结符。</li>
+</ul>
+<h2 id="_5">每次修改后的最小验证</h2>
+<p>正确新规则 → 新规则嵌套 → 可选段为空 → 每种规定错误 → 跨行行号 → 旧规则回归。</p>
+<p>先看 lexer.txt：若词法不对先修词法。再看 error.txt 和 parser.txt。语法输出必须完整且顺序正确，不能只搜索到一个新关键字就判定通过。</p>
+<p>调试构建：在 gcc 命令中加 <code>-DPARSER_DEBUG_ENABLED=1</code>。观察失败前 token；外层 rollback 后显示的位置可能不是原始失败位置。提交前恢复普通构建并移除自行添加的调试输出。</p>
+<h2 id="_6">交卷检查</h2>
+<p>逐项核对试卷要求：源文件是否齐全、入口只有一个 main、配置是否需要提交、压缩包是否要求根目录放源码、输出名称和大小写是否一致、无旧版本混入。不要把本备考资料 ZIP 当成考试源代码提交包。</p>
+<p>机房环境说明没有给出本次考题和资料携带规则，按课程通知执行。新增文法的演练代码不应不加选择地全部并入考试答案。</p></html>

@@ -1,0 +1,5 @@
+1 x Int
+1 work VoidFunc
+2 x Char
+2 inside Char
+3 letters StaticCharArray

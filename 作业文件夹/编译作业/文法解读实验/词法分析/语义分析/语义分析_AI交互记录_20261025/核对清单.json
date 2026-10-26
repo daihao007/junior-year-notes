@@ -1,0 +1,97 @@
+{
+  "session_id": "01a16c96-a956-7cb1-8248-1cb6df75ed48",
+  "start_time": "2026-10-24T14:28:14+08:00",
+  "cutoff_time": "2026-10-25T14:03:25+08:00",
+  "source_log_start_line": 18,
+  "source_log_end_line": 1208,
+  "messages": {
+    "total": 136,
+    "user": 47,
+    "assistant": 89
+  },
+  "tool_call_inputs": 70,
+  "attachments": [
+    {
+      "path": "附件/题目截图_001.png",
+      "mime_type": "image/png",
+      "bytes": 212948,
+      "sha256": "c35eea0d427ea1f184ea5651706f48e756cd82e428d7f9d0be94e95ec72a4fc8",
+      "source_log_line": 92
+    },
+    {
+      "path": "附件/题目截图_002.png",
+      "mime_type": "image/png",
+      "bytes": 65272,
+      "sha256": "c2df0c3e030fd473cb09e63112cbc6b866c6c980447b02ee71de3a1f067c3b3c",
+      "source_log_line": 92
+    },
+    {
+      "path": "附件/题目截图_003.png",
+      "mime_type": "image/png",
+      "bytes": 283443,
+      "sha256": "b167dcf605ee4fa8535f2ea09d55fff11305c91885692f32b175c3d475630f0c",
+      "source_log_line": 92
+    },
+    {
+      "path": "附件/题目截图_004.png",
+      "mime_type": "image/png",
+      "bytes": 128521,
+      "sha256": "ac90f5641d6e33a44d3c926464bdde27b08644dcb670314e79296ddfe357b5b7",
+      "source_log_line": 92
+    },
+    {
+      "path": "附件/题目截图_005.png",
+      "mime_type": "image/png",
+      "bytes": 58884,
+      "sha256": "f3436f078e7efcca7320c91de0371d948ad11ece4e2eb2355cc2431009522449",
+      "source_log_line": 92
+    },
+    {
+      "path": "附件/题目截图_006.png",
+      "mime_type": "image/png",
+      "bytes": 46365,
+      "sha256": "c14e74daf16ae4e16fbfabfe5738e3776429bc59a42e30293af681cdeb949a51",
+      "source_log_line": 92
+    },
+    {
+      "path": "附件/题目截图_007.png",
+      "mime_type": "image/png",
+      "bytes": 30749,
+      "sha256": "fdff537e2f8cf9d9cdd5207f36bbb81e23ef8f04a6df100745b1489bf8d32709",
+      "source_log_line": 92
+    }
+  ],
+  "source_sha256": {
+    "parser.c": "7cbee65cd56204141b2fa9edd61afadf212d9a52668dce315f40c81dc1f09728",
+    "token.c": "5ea8454b5a10fdebaea524743998a3a05c727828cec95778c904a7c1ccecb2cf",
+    "token.h": "9c9db84d205325d95810bdf957e9621c473f70bf2e9bac7991833308e4558d93",
+    "syntax_tree.c": "a2db1ebf46b0543365ba9b01fa2e6fd3bcb164ef96e9d1c0da7dca4c7532b770",
+    "syntax_tree.h": "f1814f3fa5b279be30d4c73786b1e7b196b2d81d8f9ef5aa606488b832561014",
+    "error_list.c": "70fb92998f0f8507621c4fd3b9e583c322f68b0fbcb6b4535b0c0e4dd452b17d",
+    "error_list.h": "15cb41c9f5211d058467dda455eefaa7cf4d862c1e5296757e56a39f83066463",
+    "symbol.c": "518a6830a4f1748860151bd85da732999d772e4f9d0844754607607de47a1fd6",
+    "symbol.h": "6119d1549812ac429bd6b4261c1e0fe62c2d90a16900c9bdb601f803ec77a8a2",
+    "semantic.c": "6288001615da9dcefad20e52901fe1d6ba63851d06fef193155d89e8a75ea011",
+    "semantic.h": "669f38597da8a678b710be56f07b14a9b947750b0ec0ad0ec736a23778e99f91",
+    "config.json": "37716884f09370a9d2fc19aad87d0cd3f5fbfa087c767fb5271ece4825eafbbc"
+  },
+  "matches_working_sources": true,
+  "matches_submission_zip": true,
+  "historical_regression_checks_passed": 64,
+  "tests_rerun_during_export": false,
+  "sensitive_pattern_scan": {
+    "matched": false,
+    "patterns": [
+      "private_key",
+      "openai_api_key",
+      "github_token",
+      "aws_access_key",
+      "bearer_token"
+    ],
+    "redactions": 0
+  },
+  "assistant_phases": {
+    "commentary": 43,
+    "final_answer": 46
+  }
+}

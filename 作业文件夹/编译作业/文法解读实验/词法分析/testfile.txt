@@ -1,0 +1,7 @@
+int main() {
+    int value = missing;
+    value = other;
+    absent[0] = 1;
+    unknown();
+    return 0;
+}

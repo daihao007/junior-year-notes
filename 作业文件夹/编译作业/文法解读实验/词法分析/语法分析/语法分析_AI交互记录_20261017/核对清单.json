@@ -1,0 +1,127 @@
+{
+  "assignment": "语法分析",
+  "session_id": "01a1443f-7229-78a1-8c1a-79d815e12bdb",
+  "source_session_filename": "rollout-2026-10-16T18-26-11-01a1443f-7229-78a1-8c1a-79d815e12bdb.jsonl",
+  "conversation_first_timestamp_utc": "2026-10-16T10:27:20.262Z",
+  "conversation_cutoff_timestamp_utc": "2026-10-17T12:17:06.247Z",
+  "source_cutoff_line": 1877,
+  "source_log_prefix_sha256": "cc06c061f290999e4e6d12c73123057f3d48beb5d4a6d3ca02b6ffb79c0b94d2",
+  "exported_at_beijing": "2026-10-17T20:20:53+08:00",
+  "message_count": 205,
+  "role_counts": {
+    "user": 71,
+    "assistant": 134
+  },
+  "tool_input_record_count": 107,
+  "attachment_count": 1,
+  "attachments": [
+    {
+      "file": "附件/图片_001.png",
+      "mime_type": "image/png",
+      "bytes": 16999,
+      "sha256": "476e00d4e75b9422896a8cd0eac2fd4a1e33bb78d23a36e5fcc2d96c4059d648",
+      "source_line": 630
+    }
+  ],
+  "redactions": {},
+  "secret_scan": "Common token/key patterns only; not a guarantee of exhaustive privacy detection.",
+  "source_snapshot_sha256": {
+    "parser.c": "72777a058e9cde7535501612c6cd1237da6619324d74719f70f10b96ecd81573",
+    "token.c": "5ea8454b5a10fdebaea524743998a3a05c727828cec95778c904a7c1ccecb2cf",
+    "token.h": "9c9db84d205325d95810bdf957e9621c473f70bf2e9bac7991833308e4558d93",
+    "syntax_tree.c": "a2db1ebf46b0543365ba9b01fa2e6fd3bcb164ef96e9d1c0da7dca4c7532b770",
+    "syntax_tree.h": "f1814f3fa5b279be30d4c73786b1e7b196b2d81d8f9ef5aa606488b832561014",
+    "error_list.c": "70fb92998f0f8507621c4fd3b9e583c322f68b0fbcb6b4535b0c0e4dd452b17d",
+    "error_list.h": "15cb41c9f5211d058467dda455eefaa7cf4d862c1e5296757e56a39f83066463",
+    "config.json": "37716884f09370a9d2fc19aad87d0cd3f5fbfa087c767fb5271ece4825eafbbc"
+  },
+  "existing_code_zip": "syntax_tree.zip",
+  "existing_code_zip_sha256": "7ba7626221f31a91f1038806453211aa7c7b172b13ef75ef177ee8f8b4f39017",
+  "snapshot_matches_existing_code_zip": {
+    "parser.c": true,
+    "token.c": true,
+    "token.h": true,
+    "syntax_tree.c": true,
+    "syntax_tree.h": true,
+    "error_list.c": true,
+    "error_list.h": true,
+    "config.json": true
+  },
+  "excluded_ui_message_source_lines": [
+    6,
+    10,
+    304,
+    308,
+    976
+  ],
+  "excluded_record_types": [
+    "system/developer instructions",
+    "internal reasoning",
+    "compaction summaries",
+    "environment/UI injection",
+    "tool return contents",
+    "messages after cutoff"
+  ],
+  "upstream_chatgpt_history": "Only the bounded preview present in the first user message is included; full upstream conversation was unavailable.",
+  "snapshot_build": {
+    "success": true,
+    "warnings": false,
+    "compiler": "gcc",
+    "command": "gcc -Wall -Wextra -std=c11 parser.c token.c syntax_tree.c error_list.c -o parser.exe"
+  },
+  "validation_scope": "Exact source/ZIP comparison and snapshot compilation; historical tests and platform grading were not rerun during this export.",
+  "files_except_manifest": {
+    "README.md": {
+      "bytes": 3757,
+      "sha256": "cf747651ce327a8d60c67b251800cd881c104b4f56e3caf439aaece8f7b9c4aa"
+    },
+    "代码快照/config.json": {
+      "bytes": 63,
+      "sha256": "37716884f09370a9d2fc19aad87d0cd3f5fbfa087c767fb5271ece4825eafbbc"
+    },
+    "代码快照/error_list.c": {
+      "bytes": 1908,
+      "sha256": "70fb92998f0f8507621c4fd3b9e583c322f68b0fbcb6b4535b0c0e4dd452b17d"
+    },
+    "代码快照/error_list.h": {
+      "bytes": 582,
+      "sha256": "15cb41c9f5211d058467dda455eefaa7cf4d862c1e5296757e56a39f83066463"
+    },
+    "代码快照/parser.c": {
+      "bytes": 47488,
+      "sha256": "72777a058e9cde7535501612c6cd1237da6619324d74719f70f10b96ecd81573"
+    },
+    "代码快照/syntax_tree.c": {
+      "bytes": 3525,
+      "sha256": "a2db1ebf46b0543365ba9b01fa2e6fd3bcb164ef96e9d1c0da7dca4c7532b770"
+    },
+    "代码快照/syntax_tree.h": {
+      "bytes": 709,
+      "sha256": "f1814f3fa5b279be30d4c73786b1e7b196b2d81d8f9ef5aa606488b832561014"
+    },
+    "代码快照/token.c": {
+      "bytes": 1476,
+      "sha256": "5ea8454b5a10fdebaea524743998a3a05c727828cec95778c904a7c1ccecb2cf"
+    },
+    "代码快照/token.h": {
+      "bytes": 581,
+      "sha256": "9c9db84d205325d95810bdf957e9621c473f70bf2e9bac7991833308e4558d93"
+    },
+    "对话消息.jsonl": {
+      "bytes": 254359,
+      "sha256": "850f23c41caaac5cd90c36e148def7cbb2e8354ba1942500cf86512bc9a4f6ab"
+    },
+    "对话记录.md": {
+      "bytes": 206373,
+      "sha256": "4cc3b3cda4e781dc66800437ff950858b0d3d0469e57c424e4d13c6a85cc29fc"
+    },
+    "工具调用代码.jsonl": {
+      "bytes": 196788,
+      "sha256": "e817291ded55f32fda0c04451be8184f22e6af596eed897e9a5e65ab1274f389"
+    },
+    "附件/图片_001.png": {
+      "bytes": 16999,
+      "sha256": "476e00d4e75b9422896a8cd0eac2fd4a1e33bb78d23a36e5fcc2d96c4059d648"
+    }
+  }
+}
