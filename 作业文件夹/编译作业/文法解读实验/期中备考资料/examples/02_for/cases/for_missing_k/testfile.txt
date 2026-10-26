@@ -1,0 +1,2 @@
+int main(){
+for(a[0=0;;); return 0;}

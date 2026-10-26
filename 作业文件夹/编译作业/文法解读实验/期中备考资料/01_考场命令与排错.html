@@ -1,0 +1,185 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>01_考场命令与排错</title><style>body{max-width:960px;margin:40px auto;padding:0 28px;color:#172331;font:17px/1.8 "Microsoft YaHei",sans-serif}h1,h2,h3{line-height:1.4;color:#153d62}h2{margin-top:2em;border-bottom:1px solid #ccd7e1;padding-bottom:.3em}pre{background:#f2f5f8;padding:16px;border:1px solid #d7e0e8;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 Consolas,monospace}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%;font-size:15px}th,td{padding:8px;border:1px solid #ccd7e1;text-align:left;vertical-align:top}th{background:#eef3f7}a{color:#175ea0}@media print{body{margin:0;max-width:none;font-size:11pt}pre{font-size:9pt}h1,h2,h3{break-after:avoid}tr{break-inside:avoid}thead{display:table-header-group}}</style><nav><a href="00_先看这里.html">00_先看这里</a> | <a href="01_考场命令与排错.html">01_考场命令与排错</a> | <a href="02_函数地图与解析原理.html">02_函数地图与解析原理</a> | <a href="03_新增文法实战.html">03_新增文法实战</a> | <a href="04_考场速查.html">04_考场速查</a> | <a href="函数定位表.html">函数定位表</a></nav><h1 id="_1">编译、运行与机房操作</h1>
+<h2 id="1">1. 先分清你在编译什么</h2>
+<p><code>parser.c</code> 等文件是你写的“编译器程序”的源代码。GCC 把它们编译成 <code>compiler.exe</code>。<code>testfile.txt</code> 则是交给这个编译器分析的 SysY 程序。</p>
+<pre><code class="language-text">parser.c + token.c + syntax_tree.c + error_list.c
+                     ↓ gcc（编译并链接）
+                 compiler.exe
+                     ↓ 运行，读取当前目录的 testfile.txt
+          lexer.txt / parser.txt / error.txt
+</code></pre>
+<p>修改 .c 或 .h 后必须重新编译。只修改 testfile.txt 时，直接重新运行 exe 即可。本阶段不会执行 SysY 程序中的 printf；它只分析程序，写分析结果。</p>
+<h2 id="2">2. 机房环境说明中的事实</h2>
+<table>
+<thead>
+<tr>
+<th>环境</th>
+<th>新主楼/央财</th>
+<th>新北</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLion</td>
+<td>2019.3.6</td>
+<td>2019.3.6</td>
+</tr>
+<tr>
+<td>CMake</td>
+<td>3.28.3</td>
+<td>3.28.3</td>
+</tr>
+<tr>
+<td>GCC</td>
+<td>11.2.0</td>
+<td>11.4.0</td>
+</tr>
+<tr>
+<td>Clang</td>
+<td>12.0.0</td>
+<td>12.0.0，LLVM 环境在 WSL</td>
+</tr>
+</tbody>
+</table>
+<p>说明要求 CMake 使用 <code>-G Ninja</code>。当前任务是 C 编译器的前端扩充，下面的 GCC/CMake 命令即可完成构建。PDF 中 libsysy、llvm-link、lli 那组命令用于运行生成的 LLVM IR，不属于本次已给出的词法/语法范围。</p>
+<h2 id="3-powershell">3. PowerShell：推荐先掌握这套</h2>
+<p>假设你将本资料解压到 <code>D:\midterm</code>，其中有 <code>starter</code> 文件夹。路径是示例，应替换为实际位置。</p>
+<pre><code class="language-powershell">cd 'D:\midterm\starter'
+Get-Location
+Get-ChildItem
+gcc --version
+gcc -Wall -Wextra -std=c11 parser.c token.c syntax_tree.c error_list.c -o compiler.exe
+$LASTEXITCODE
+</code></pre>
+<p>确认编译结束且 <code>$LASTEXITCODE</code> 为 <code>0</code>，再运行：</p>
+<pre><code class="language-powershell">.\compiler.exe
+$LASTEXITCODE
+Get-Content .\lexer.txt
+Get-Content .\parser.txt
+Get-Content .\error.txt
+</code></pre>
+<p>逐行执行；不要把 Markdown 的三反引号复制进终端。<code>$LASTEXITCODE</code> 是上一次本机程序的退出码，要紧接 gcc 或 exe 查看。<strong>退出码为 0 不保证输入语法正确</strong>：该旧版 main 即使普通语法分析失败也可能返回 0，判断还要看 error.txt、parser.txt 和调试信息。</p>
+<p>参数解释：<code>-Wall -Wextra</code> 打开常用警告；<code>-std=c11</code> 按 C11 编译；四个 .c 都要参与；<code>-o compiler.exe</code> 指定生成文件名。头文件由 <code>#include</code> 引用，不单独列在编译命令里。</p>
+<p>如果编译失败，不要运行旧 exe。考试时不必加 <code>-Werror</code>，它会把警告也当成编译错误；本资料自动验证时使用它检查示例质量。</p>
+<h2 id="4-cmd-powershell">4. cmd：不要混用 PowerShell 语法</h2>
+<pre><code class="language-bat">cd /d D:\midterm\starter
+dir
+gcc --version
+gcc -Wall -Wextra -std=c11 parser.c token.c syntax_tree.c error_list.c -o compiler.exe
+echo %ERRORLEVEL%
+compiler.exe
+echo %ERRORLEVEL%
+type lexer.txt
+type parser.txt
+type error.txt
+</code></pre>
+<p>cmd 用 <code>cd /d</code> 同时切换盘符和目录；PowerShell 的 <code>cd</code> 不需要 <code>/d</code>。带空格的 cmd 路径加双引号，如 <code>cd /d "D:\my project\starter"</code>。PowerShell 使用 <code>$LASTEXITCODE</code>，cmd 使用 <code>%ERRORLEVEL%</code>。</p>
+<h2 id="5-cmake-clion">5. CMake 与 CLion</h2>
+<p>starter 和每个示例都带有这个 CMakeLists.txt：</p>
+<pre><code class="language-cmake">cmake_minimum_required(VERSION 3.16)
+project(midterm C)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+add_executable(compiler parser.c token.c syntax_tree.c error_list.c)
+if(CMAKE_C_COMPILER_ID MATCHES &quot;GNU|Clang&quot;)
+    target_compile_options(compiler PRIVATE -Wall -Wextra)
+endif()
+</code></pre>
+<p>在包含 CMakeLists.txt 的目录运行 PDF 指定的构建方式：</p>
+<pre><code class="language-powershell">cmake -B build -S . -G Ninja
+$LASTEXITCODE
+cmake --build build
+$LASTEXITCODE
+.\build\compiler.exe
+</code></pre>
+<p>只有上一条成功才执行下一条。<code>-B build</code> 指定构建目录；<code>-S .</code> 指定当前源代码目录；<code>-G Ninja</code> 选择生成器。exe 放在 build 下，<strong>运行时仍站在项目根目录</strong>，从而读取根目录 testfile.txt。cmd 运行写 <code>build\compiler.exe</code>。</p>
+<p>CLion 中打开包含 CMakeLists.txt 的文件夹，检查 Settings → Build, Execution, Deployment → Toolchains 中 C 编译器是否可用，重新加载 CMake。运行配置中的 Working directory 设置为含 testfile.txt 的项目根目录，程序参数留空。IDE 内终端使用的 shell 可能是 cmd 或 PowerShell，按其语法执行。</p>
+<p>若 build 已经用其他生成器配置，换一个未使用过的目录即可：</p>
+<pre><code class="language-powershell">cmake -B build_ninja -S . -G Ninja
+cmake --build build_ninja
+.\build_ninja\compiler.exe
+</code></pre>
+<p>机房有 GCC 不等于当前终端 PATH 已配置 GCC。<code>gcc</code> 找不到时，先查看 CLion Toolchains 中实际编译器路径，使用那个 gcc.exe 的完整路径。PowerShell 示例（路径必须换成真实路径）：</p>
+<pre><code class="language-powershell">&amp; 'C:\实际工具链目录\bin\gcc.exe' -Wall -Wextra -std=c11 parser.c token.c syntax_tree.c error_list.c -o compiler.exe
+</code></pre>
+<p>这里 <code>&amp;</code> 用来执行引号中的程序路径。cmd 则直接写双引号括住的 exe 路径，不加 <code>&amp;</code>。不要猜测机房安装目录。</p>
+<h2 id="6">6. 完整语义版本的编译命令</h2>
+<p>如果你是在原来的 <code>词法分析</code> 文件夹中操作，当前 parser.c 还依赖 symbol.c 和 semantic.c，命令是：</p>
+<pre><code class="language-powershell">gcc -Wall -Wextra -std=c11 parser.c token.c syntax_tree.c error_list.c symbol.c semantic.c -o compiler.exe
+.\compiler.exe
+</code></pre>
+<p>这条用于原工程；四文件命令用于资料包 starter/examples。不要只漏掉链接文件来“关闭语义”，那会出现 undefined reference。不要使用 <code>gcc *.c</code>：原目录还包含 lexer.c 和多个 *_test.c，它们也定义 main，容易造成 multiple definition of main。</p>
+<h2 id="7">7. 调试开关与输出</h2>
+<pre><code class="language-powershell">gcc -Wall -Wextra -std=c11 -DPARSER_DEBUG_ENABLED=1 parser.c token.c syntax_tree.c error_list.c -o compiler_debug.exe
+.\compiler_debug.exe
+</code></pre>
+<p>调试输出包括 token 总数、各 token 行号、CompUnit 成功与否和剩余 token。失败的外层函数会 rollback，所以最后显示的位置可能已经回到开头，<strong>不能直接当成真实错误位置</strong>。此时在新分支失败前打印当前 token 到 stderr，或设置断点观察 pos。</p>
+<p>提交前重新使用普通编译命令，确认没有新增调试 printf 混入规定输出。<code>PARSER_OUTPUT_ENABLED=0</code> 关闭语法文件输出，通常不用于语法考核；关闭时也不会帮你清理旧文件。</p>
+<h2 id="8">8. 常见故障对照</h2>
+<table>
+<thead>
+<tr>
+<th>表现</th>
+<th>优先检查</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>gcc 不是命令</td>
+<td>PATH/CLion 工具链，使用已安装 gcc 的真实路径</td>
+</tr>
+<tr>
+<td>cannot open source file / No such file</td>
+<td>当前目录是否有四个 .c，文件名是否正确</td>
+</tr>
+<tr>
+<td>undefined reference to addToken 等</td>
+<td>是否遗漏 token.c/syntax_tree.c/error_list.c</td>
+</tr>
+<tr>
+<td>undefined reference to analyzeSemantics</td>
+<td>使用了完整版本，应链接 semantic.c 和 symbol.c</td>
+</tr>
+<tr>
+<td>multiple definition of main</td>
+<td>是否用了 *.c，把测试/独立 lexer 一起编译了</td>
+</tr>
+<tr>
+<td>implicit declaration / conflicting types</td>
+<td>新函数是否在调用前声明，返回值与参数是否一致</td>
+</tr>
+<tr>
+<td>cannot open output file / Permission denied</td>
+<td>旧程序是否还在运行、被调试器占用，先停止再构建</td>
+</tr>
+<tr>
+<td>无法打开 testfile.txt</td>
+<td>当前工作目录错误；文件可能实际叫 testfile.txt.txt</td>
+</tr>
+<tr>
+<td>exe 没有终端输出</td>
+<td>正常，去看三个输出文件</td>
+</tr>
+<tr>
+<td>lexer.txt 正确但 parser.txt 为空</td>
+<td>检查 error.txt、语法入口/分派/回退与调试信息</td>
+</tr>
+<tr>
+<td>error.txt 空但 parser.txt 也空</td>
+<td>可能是未恢复的语法失败或其他词法失败，不代表成功</td>
+</tr>
+<tr>
+<td>修改后结果没变</td>
+<td>是否编译失败仍在运行旧 exe，是否修改了另一份副本</td>
+</tr>
+<tr>
+<td>运行一直不结束</td>
+<td>循环是否没有推进 token，或恢复后反复停在同一位置</td>
+</tr>
+</tbody>
+</table>
+<p>最小自检输入：将以下内容保存为 UTF-8 无 BOM 或纯 ASCII 的 testfile.txt（Windows PowerShell 5 的默认重定向可能写出 UTF-16，优先用编辑器保存）：</p>
+<pre><code class="language-c">int main() {
+    return 0;
+}
+</code></pre>
+<p>预期 error.txt 为空，parser.txt 最后有 <code>&lt;MainFuncDef&gt;</code> 和 <code>&lt;CompUnit&gt;</code>，lexer.txt 以 <code>INTTK int</code> 开始。BOM 可能被当前词法器当成未知字符；看起来内容正确却失败时检查编码。</p></html>

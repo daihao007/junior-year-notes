@@ -1,0 +1,320 @@
+{
+  "scope": "Local GCC compilation and representative lexer/parser/error-recovery checks; no platform or lab execution",
+  "gcc": "gcc (x86_64-posix-seh-rev0, Built by MinGW-W64 project) 8.1.0",
+  "cmake": "Configuration provided per lab PDF; cmake/ninja unavailable in current PATH, not executed",
+  "projects_compiled": 5,
+  "passed": 52,
+  "cases": [
+    {
+      "project": "starter",
+      "case": "minimal",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "starter",
+      "case": "legacy",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "starter",
+      "case": "missing_semicolon",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "starter",
+      "case": "missing_paren",
+      "passed": true,
+      "expected_errors": "1 j\n"
+    },
+    {
+      "project": "starter",
+      "case": "missing_bracket",
+      "passed": true,
+      "expected_errors": "1 k\n"
+    },
+    {
+      "project": "starter",
+      "case": "lone_and",
+      "passed": true,
+      "expected_errors": "1 a\n"
+    },
+    {
+      "project": "01_do_while",
+      "case": "minimal",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "01_do_while",
+      "case": "legacy",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "01_do_while",
+      "case": "missing_semicolon",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "01_do_while",
+      "case": "missing_paren",
+      "passed": true,
+      "expected_errors": "1 j\n"
+    },
+    {
+      "project": "01_do_while",
+      "case": "missing_bracket",
+      "passed": true,
+      "expected_errors": "1 k\n"
+    },
+    {
+      "project": "01_do_while",
+      "case": "lone_and",
+      "passed": true,
+      "expected_errors": "1 a\n"
+    },
+    {
+      "project": "01_do_while",
+      "case": "nested",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "01_do_while",
+      "case": "do_missing_j",
+      "passed": true,
+      "expected_errors": "2 j\n"
+    },
+    {
+      "project": "01_do_while",
+      "case": "do_missing_i",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "01_do_while",
+      "case": "keyword_boundary",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "01_do_while",
+      "case": "provided_sample",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "02_for",
+      "case": "minimal",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "02_for",
+      "case": "legacy",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "02_for",
+      "case": "missing_semicolon",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "02_for",
+      "case": "missing_paren",
+      "passed": true,
+      "expected_errors": "1 j\n"
+    },
+    {
+      "project": "02_for",
+      "case": "missing_bracket",
+      "passed": true,
+      "expected_errors": "1 k\n"
+    },
+    {
+      "project": "02_for",
+      "case": "lone_and",
+      "passed": true,
+      "expected_errors": "1 a\n"
+    },
+    {
+      "project": "02_for",
+      "case": "for_optional",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "02_for",
+      "case": "for_nested",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "02_for",
+      "case": "for_missing_first_i",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "02_for",
+      "case": "for_missing_second_i",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "02_for",
+      "case": "for_missing_j",
+      "passed": true,
+      "expected_errors": "2 j\n"
+    },
+    {
+      "project": "02_for",
+      "case": "for_missing_k",
+      "passed": true,
+      "expected_errors": "2 k\n"
+    },
+    {
+      "project": "02_for",
+      "case": "provided_sample",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "minimal",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "legacy",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "missing_semicolon",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "missing_paren",
+      "passed": true,
+      "expected_errors": "1 j\n"
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "missing_bracket",
+      "passed": true,
+      "expected_errors": "1 k\n"
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "lone_and",
+      "passed": true,
+      "expected_errors": "1 a\n"
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "plus_single",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "plus_missing_i",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "plus_missing_k",
+      "passed": true,
+      "expected_errors": "1 k\n"
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "provided_sample",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "minimal",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "legacy",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "missing_semicolon",
+      "passed": true,
+      "expected_errors": "2 i\n"
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "missing_paren",
+      "passed": true,
+      "expected_errors": "1 j\n"
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "missing_bracket",
+      "passed": true,
+      "expected_errors": "1 k\n"
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "lone_and",
+      "passed": true,
+      "expected_errors": "1 a\n"
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "inc_starts",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "inc_array",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "inc_missing_k",
+      "passed": true,
+      "expected_errors": "1 k\n"
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "inc_old_plus",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "04_prefix_inc",
+      "case": "provided_sample",
+      "passed": true,
+      "expected_errors": ""
+    },
+    {
+      "project": "03_plus_assign",
+      "case": "spaced_operator_rejected",
+      "passed": true
+    }
+  ]
+}

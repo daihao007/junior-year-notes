@@ -1,0 +1,1 @@
+int main(){int doublex; doublex=1; return 0;}

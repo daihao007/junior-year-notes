@@ -1,0 +1,1 @@
+int main(){for(a[0]=0;a[0]<2;a[0]=a[0]+1) for(;;) ; return 0;}

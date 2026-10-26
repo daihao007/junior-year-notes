@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>00_先看这里</title><style>body{max-width:960px;margin:40px auto;padding:0 28px;color:#172331;font:17px/1.8 "Microsoft YaHei",sans-serif}h1,h2,h3{line-height:1.4;color:#153d62}h2{margin-top:2em;border-bottom:1px solid #ccd7e1;padding-bottom:.3em}pre{background:#f2f5f8;padding:16px;border:1px solid #d7e0e8;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 Consolas,monospace}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%;font-size:15px}th,td{padding:8px;border:1px solid #ccd7e1;text-align:left;vertical-align:top}th{background:#eef3f7}a{color:#175ea0}@media print{body{margin:0;max-width:none;font-size:11pt}pre{font-size:9pt}h1,h2,h3{break-after:avoid}tr{break-inside:avoid}thead{display:table-header-group}}</style><nav><a href="00_先看这里.html">00_先看这里</a> | <a href="01_考场命令与排错.html">01_考场命令与排错</a> | <a href="02_函数地图与解析原理.html">02_函数地图与解析原理</a> | <a href="03_新增文法实战.html">03_新增文法实战</a> | <a href="04_考场速查.html">04_考场速查</a> | <a href="函数定位表.html">函数定位表</a></nav><h1 id="_1">编译技术期中备考资料</h1>
+<p>适用范围：在自己的编译器上扩充新文法，完成词法分析、语法分析和题目规定的错误处理。依据：你提供的《机房环境说明.pdf》、考核范围，以及本项目的实际 C 源代码。新增文法在考场公布，本资料中的 do-while、for、+=、前缀 ++ 是训练题，不是考试预测。</p>
+<h2 id="_2">阅读顺序</h2>
+<ol>
+<li><strong>01_考场命令与排错.md</strong>：先学会编译、运行、查看输出。考场首先打开它。</li>
+<li><strong>02_函数地图与解析原理.md</strong>：认清每个函数的工作，理解 token、节点栈与回退。</li>
+<li><strong>03_新增文法实战.md</strong>：对着完整代码练习新增语句、运算符和错误恢复。</li>
+<li><strong>04_考场速查.md</strong>：最后复习，以及考场快速定位。</li>
+<li><strong>函数定位表.md</strong>：从函数名查到练习底稿中的行号；修改后行号会变化，以函数名搜索为准。</li>
+</ol>
+<p>各 Markdown 文件都有同名 HTML，双击 HTML 可离线阅读，浏览器 Ctrl+P 可打印或保存为 PDF。无需联网、插件或 Python 才能读资料和编译 C 项目。Python 只用于随附的自动验证工具。</p>
+<h2 id="_3">随附代码</h2>
+<ul>
+<li><code>starter/</code>：从你已有的 <code>词法分析/语法分析/</code> 复制的词法/语法阶段源码；附 CMakeLists.txt 和最小 testfile.txt。</li>
+<li><code>examples/</code>：四个互相独立的完整项目，每个从 starter 扩充一种规则。用文件对比观察修改处。</li>
+<li><code>练习验证结果.json</code>：本机实际执行的检查结果；不代表机房或评测平台已验证。</li>
+<li><code>原始材料/机房环境说明.pdf</code>：你提供的环境说明。</li>
+</ul>
+<p>练习时先复制整个 starter 文件夹并重命名，然后在副本上修改。原工程和已经完成的语义分析提交代码不受影响。</p>
+<p>为何使用语法阶段底稿：当前完整版本会运行 <code>analyzeSemantics</code>，未知的新语法节点可能造成语义误判，并影响 parser.txt 输出。期中范围目前只写了词法/语法和错误处理。这个底稿只做对应阶段；如果考试另要求使用最新版或增加语义规则，应以试卷为准。<code>-DSYMBOL_OUTPUT_ENABLED=0</code> 只是关闭符号输出，不能关闭语义分析。</p>
+<p>资料能否带入、电子文件和源码是否允许、是否允许联网或 AI，环境说明没有说明；请按课程考试纪律准备允许携带的版本。本资料不依赖考场在线 AI。</p>
+<h2 id="_4">建议完成的考前练习</h2>
+<p>第一轮：在 starter 里改 testfile.txt，完成一次正确输入、缺分号输入、调试输出。</p>
+<p>第二轮：从空白 starter 手动加入 do-while，不看完整示例完成后再对比。</p>
+<p>第三轮：完成 for 的可选部分，专门测试 <code>for (;;) ;</code>、缺右括号和数组左值。</p>
+<p>第四轮：练习 += 的最长匹配和 ++ 的表达式起始集合，最后再跑旧语法样例。</p>
+<p>练习完成的标准：能解释每一处修改的原因，能独立写出编译/运行命令，能说明出错后 token 停在哪里。</p></html>
