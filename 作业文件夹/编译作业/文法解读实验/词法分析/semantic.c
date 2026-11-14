@@ -114,6 +114,7 @@ static DataType getBaseType(const SyntaxNode *node)
     return TYPE_ERROR;
 }
 
+//区分数组和标量
 static DataType getDefinitionType(
     const SyntaxNode *definition,
     DataType baseType)
@@ -245,6 +246,7 @@ static const Token *getFirstToken(const SyntaxNode *node)
     return NULL;
 }
 
+//根据节点定位行号记录错误
 static void reportNodeError(
     SemanticContext *context,
     const SyntaxNode *node,
@@ -258,6 +260,7 @@ static void reportNodeError(
     }
 }
 
+//检查变量或数组访问，并给出左值表达式类型
 static DataType getLValType(
     SemanticContext *context,
     const SyntaxNode *node,
@@ -322,6 +325,7 @@ static DataType getLValType(
                : TYPE_CHAR;
 }
 
+//将实参类型列表与查到的函数签名匹配
 static DataType getCallType(
     SemanticContext *context,
     const SyntaxNode *node,
@@ -334,6 +338,7 @@ static DataType getCallType(
     }
 
     const SyntaxNode *identifier = findChild(node, "IDENFR");
+    //找到函数名
     const Symbol *function = resolveIdentifier(context, identifier);
 
     if (function == NULL)
@@ -446,6 +451,7 @@ static DataType analyzeCall(
     return result;
 }
 
+//递归计算表达式的类型
 static DataType analyzeExpression(
     SemanticContext *context,
     const SyntaxNode *node)
@@ -577,6 +583,7 @@ static DataType analyzeExpression(
     return TYPE_ERROR;
 }
 
+//将一项变量、常量或形参定义登记入符号表
 static void registerDefinition(
     SemanticContext *context,
     const SyntaxNode *definition,
@@ -624,6 +631,7 @@ static void registerDefinition(
     }
 }
 
+//见擦汗数组长度和初始化表达式类型
 static void analyzeDefinitionValues(
     SemanticContext *context,
     const SyntaxNode *definition,
@@ -702,6 +710,7 @@ static void analyzeDefinitionValues(
     }
 }
 
+//分析整个ConstDecl或VarDecl
 static void analyzeDeclaration(
     SemanticContext *context,
     const SyntaxNode *declaration)
@@ -757,6 +766,7 @@ static void analyzeDeclaration(
     }
 }
 
+//按顺序分析Block，并根据参数决定是否创建作用域
 static void analyzeBlock(SemanticContext *context,const SyntaxNode *block,int createScope){
     if(context->memoryError || !isNode(block,"Block")){
         return;
@@ -782,6 +792,7 @@ static void analyzeBlock(SemanticContext *context,const SyntaxNode *block,int cr
     }
 }
 
+//把每个形参作为函数内部的变量登记
 static void registerParameters(SemanticContext *context,const SyntaxNode *parameters){
     if(context->memoryError || !isNode(parameters,"FuncFParams")){
         return;
@@ -806,6 +817,7 @@ static void registerParameters(SemanticContext *context,const SyntaxNode *parame
     }
 }
 
+//提取有序形参类型列表，建立函数签名
 static int collectParameterTypes(
     SemanticContext *context,
     const SyntaxNode *parameters,
@@ -874,6 +886,7 @@ static int collectParameterTypes(
     return 1;
 }
 
+//检查赋值两侧类型与常量可修改性
 static void analyzeAssignment(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -902,6 +915,7 @@ static void analyzeAssignment(
     }
 }
 
+//检查单条return语句与当前函数返回类型是否一致
 static void analyzeReturn(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -930,6 +944,7 @@ static void analyzeReturn(
     }
 }
 
+//将printf的格式字符映射成期望实参类型
 static DataType getFormatType(char specifier)
 {
     switch (specifier)
@@ -945,6 +960,7 @@ static DataType getFormatType(char specifier)
     }
 }
 
+//检查printf的占位符数量和对应实参类型
 static void analyzePrintf(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1037,6 +1053,7 @@ static void analyzePrintf(
     }
 }
 
+//检查非void函数是否以直接的顶层return结束
 static void checkFunctionReturn(
     SemanticContext *context,
     const SyntaxNode *body)
@@ -1064,6 +1081,7 @@ static void checkFunctionReturn(
     }
 }
 
+//检查条件表达式是否为标量类型
 static void analyzeCondition(
     SemanticContext *context,
     const SyntaxNode *condition)
@@ -1076,6 +1094,7 @@ static void analyzeCondition(
     }
 }
 
+//分析while条件，并维护循环嵌套深度
 static void analyzeWhile(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1102,6 +1121,7 @@ static void analyzeIf(
     }
 }
 
+//检查break、continue是否处在允许的上下文
 static void analyzeJump(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1121,6 +1141,7 @@ static void analyzeJump(
     }
 }
 
+//把case的Number字面量转换成整数值
 static long long getNumberValue(const SyntaxNode *number)
 {
     const SyntaxNode *integer = findChild(number, "INTCON");
@@ -1280,6 +1301,7 @@ static void analyzeSwitch(
     free(seen);
 }
 
+//将函数登记、作用域、形参、函数体和返回检查组合起来
 static void analyzeFunction(
     SemanticContext *context,
     const SyntaxNode *node)
@@ -1384,6 +1406,7 @@ static void analyzeFunction(
     context->switchDepth = previousSwitchDepth;
 }
 
+//根据节点类别分派任务，语义树遍历的总调度函数
 static void analyzeNode(SemanticContext *context,const SyntaxNode *node){
     if(context->memoryError || node == NULL){
         return;
@@ -1473,6 +1496,7 @@ static void analyzeNode(SemanticContext *context,const SyntaxNode *node){
     }
 }
 
+//登记一个运行库函数签名
 static void registerBuiltin(
     SemanticContext *context,
     char *name,
@@ -1500,6 +1524,7 @@ static void registerBuiltin(
     }
 }
 
+//一次注册当前程序允许调用的运行库函数
 static void registerBuiltins(SemanticContext *context)
 {
     DataType intParam[] = {TYPE_INT};

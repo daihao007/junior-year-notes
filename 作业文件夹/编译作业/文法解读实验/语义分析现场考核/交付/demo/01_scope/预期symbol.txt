@@ -1,0 +1,5 @@
+1 x Int
+1 f IntFunc
+2 p Int
+2 x Int
+3 x Char

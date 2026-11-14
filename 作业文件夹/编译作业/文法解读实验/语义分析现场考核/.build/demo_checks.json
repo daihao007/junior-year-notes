@@ -1,0 +1,18 @@
+[
+  {
+    "case": "01_scope",
+    "passed": true
+  },
+  {
+    "case": "02_errors",
+    "passed": true
+  },
+  {
+    "case": "03_context",
+    "passed": true
+  },
+  {
+    "case": "04_types",
+    "passed": true
+  }
+]

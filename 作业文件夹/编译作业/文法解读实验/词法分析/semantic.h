@@ -11,10 +11,10 @@ typedef struct
     SymbolTable *symbols;
     ErrorList *errors;
 
-    DataType currentReturnType;
+    DataType currentReturnType;//当前函数声明的返回类型
 
-    int loopDepth;
-    int switchDepth;
+    int loopDepth;//当前嵌套多少层while中
+    int switchDepth;//当前嵌套多少层switch中
 
     int memoryError;
 } SemanticContext;

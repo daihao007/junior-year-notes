@@ -50,6 +50,7 @@ void leaveScope(SymbolTable *table){
     table->currentScopeId = scope->parentId;
 }
 
+//声明名字时，只查当前作用域，判断是否重定义
 const Symbol *findSymbolInCurrentScope(const SymbolTable *table,const char *name){
     for (size_t i = 0; i < table->symbolCount;i++){
         const Symbol *symbol = &table->symbols[i];
@@ -82,6 +83,7 @@ const Symbol *findSymbol(const SymbolTable *table,const char *name){
     return NULL;
 }
 
+//符号插入：1表示插入成功，0表示当前作用域已有同名符号。-1表示插入失败
 int addSymbol(SymbolTable *table,const Symbol *source){
     if(table->currentScopeId == 0 ){
         return -1;
@@ -165,6 +167,7 @@ void freeSymbolTable(SymbolTable *table)
     initSymbolTable(table);
 }
 
+//把内部的 `kind`+`type`字段映射为题目要求的字符串
 const char *getSymbolTypeName(const Symbol *symbol)
 {
     switch (symbol->kind)
@@ -215,6 +218,7 @@ const char *getSymbolTypeName(const Symbol *symbol)
     return NULL;
 }
 
+//symbol.txt输出函数，按作用域编号输出符号，并跳过运行时库函数
 int writeSymbolOutput(
     const char *filename,
     const SymbolTable *table,

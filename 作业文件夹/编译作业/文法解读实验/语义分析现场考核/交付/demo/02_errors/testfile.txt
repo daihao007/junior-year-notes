@@ -1,0 +1,6 @@
+const int c = 1;
+int main() {
+    c = 2;
+    x = 1;
+    return 0;
+}

@@ -1,0 +1,6 @@
+int f(char c) { return (int)c; }
+int main() {
+    f(1);
+    f('a', 'b');
+    return 0;
+}
