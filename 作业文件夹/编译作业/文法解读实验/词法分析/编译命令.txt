@@ -1,0 +1,1 @@
+gcc -Wall -Wextra -std=c11 parser.c token.c syntax_tree.c error_list.c symbol.c semantic.c -o compiler.exe

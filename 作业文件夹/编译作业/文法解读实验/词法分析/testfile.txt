@@ -1,7 +1,14 @@
+int x;
+
 int main() {
-    int value = missing;
-    value = other;
-    absent[0] = 1;
-    unknown();
+    char x;
+    x = 'a';
+
+    {
+        int x;
+        x = 10;
+    }
+
+    x = 'b';
     return 0;
 }

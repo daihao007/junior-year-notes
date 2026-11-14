@@ -1,3 +1,5 @@
+// 基于 parser.c 生成的语法树进行语义分析；符号与作用域管理实现在 symbol.c。
+// TYPE_ERROR 表示类型推导失败，memoryError 表示分析器内部无法继续，两者不能混用。
 #include "semantic.h"
 #include <string.h>
 #include<stdlib.h>
@@ -6,6 +8,7 @@ static DataType analyzeExpression(
     SemanticContext *context,
     const SyntaxNode *node);
 
+// 绑定已有符号表、错误表，初始化当前函数返回类型和两种嵌套深度；不创建作用域。
 void initSemanticContext(
     SemanticContext *context,
     SymbolTable *symbols,
@@ -22,11 +25,13 @@ void initSemanticContext(
     context->memoryError = 0;
 }
 
+// 比较节点 name（如 Stmt、IDENFR），不是比较变量的原始名字；NULL 返回不匹配。
 static int isNode(const SyntaxNode *node, const char *name)
 {
     return node != NULL && strcmp(node->name, name) == 0;
 }
 
+// 只找第一个同名的直接孩子，不递归找后代；多条 Stmt/Exp 必须另行遍历。
 static const SyntaxNode *findChild(
     const SyntaxNode *node,
     const char *name)
@@ -49,6 +54,7 @@ static const SyntaxNode *findChild(
     return NULL;
 }
 
+// 将给定行号和类别加入统一 ErrorList；仅记录分配失败才置 memoryError。
 static void reportSemanticError(
     SemanticContext *context,
     int line,
@@ -65,6 +71,7 @@ static void reportSemanticError(
     }
 }
 
+// 取标识符 token 的 value，按当前作用域及父链查符号；未定义在名字处报 c。
 static const Symbol *resolveIdentifier(
     SemanticContext *context,
     const SyntaxNode *identifier)
@@ -87,6 +94,7 @@ static const Symbol *resolveIdentifier(
     return symbol;
 }
 
+// 从声明的 BType 或函数的 FuncType 读取 int/char/void，不根据初值猜测类型。
 static DataType getBaseType(const SyntaxNode *node)
 {
     // 只接受基本类型节点或函数返回类型节点。
@@ -115,6 +123,7 @@ static DataType getBaseType(const SyntaxNode *node)
 }
 
 //区分数组和标量
+// 结合基本类型和定义节点是否直接含 [，得到标量或一维数组类型。
 static DataType getDefinitionType(
     const SyntaxNode *definition,
     DataType baseType)
@@ -139,6 +148,7 @@ static DataType getDefinitionType(
     return baseType;
 }
 
+// Number 的直接 INTCON/CHARCON 决定 int/char；本函数不读取数值。
 static DataType getNumberType(const SyntaxNode *node)
 {
     if (!isNode(node, "Number"))
@@ -159,11 +169,14 @@ static DataType getNumberType(const SyntaxNode *node)
     return TYPE_ERROR;
 }
 
+// 判断是否为 int 或 char；数组整体、void、TYPE_ERROR 都不是标量。
 static int isScalarType(DataType type)
 {
     return type == TYPE_INT || type == TYPE_CHAR;
 }
 
+// 检查两侧是否为同类型标量；算术保留类型，比较和逻辑运算返回 int。
+// 子树已为 TYPE_ERROR 时传播错误类型，避免再次报由同一原因引起的 e。
 static DataType getBinaryResultType(
     SemanticContext *context,
     DataType leftType,
@@ -221,6 +234,7 @@ static DataType getBinaryResultType(
     return TYPE_ERROR;
 }
 
+// 按孩子顺序递归取得子树第一个真实 Token，为非终结符提供报错行号。
 static const Token *getFirstToken(const SyntaxNode *node)
 {
     if (node == NULL)
@@ -247,6 +261,7 @@ static const Token *getFirstToken(const SyntaxNode *node)
 }
 
 //根据节点定位行号记录错误
+// 以传入节点的首 token 行号报告错误；调用者决定传表达式、关键字或右花括号。
 static void reportNodeError(
     SemanticContext *context,
     const SyntaxNode *node,
@@ -261,6 +276,8 @@ static void reportNodeError(
 }
 
 //检查变量或数组访问，并给出左值表达式类型
+// 检查变量/数组引用：查到名字后，无下标返回符号类型，有下标则检查数组与 int 下标。
+// indexType 是调用者分析方括号内表达式所得类型，不是下标的整数值。
 static DataType getLValType(
     SemanticContext *context,
     const SyntaxNode *node,
@@ -289,6 +306,8 @@ static DataType getLValType(
     }
 
     // 没有下标，类型直接来自符号表。
+    // 没有下标时，a 可为标量，arr 可为整个数组；直接返回各自在符号表中的类型。
+    // 调用者无下标时传来的 indexType=TYPE_ERROR 只是占位值，本分支不会使用它。
     if (findChild(node, "LBRACK") == NULL)
     {
         return symbol->type;
@@ -307,6 +326,7 @@ static DataType getLValType(
         return TYPE_ERROR;
     }
 
+    // 作业下标要求 int，不隐式把 char 提升为 int；这里只检查类型，不检查下标范围。
     if (indexType != TYPE_INT)
     {
         const SyntaxNode *index = findChild(node, "Exp");
@@ -326,6 +346,8 @@ static DataType getLValType(
 }
 
 //将实参类型列表与查到的函数签名匹配
+// 根据函数名查签名：先确认是函数，再比较实参数量 d 和按位置的类型 e。
+// 签名匹配成功后返回函数声明的返回类型，不在本函数内重新遍历实参。
 static DataType getCallType(
     SemanticContext *context,
     const SyntaxNode *node,
@@ -388,6 +410,8 @@ static DataType getCallType(
     return function->type;
 }
 
+// 统计并分析 FuncRParams 的直接 Exp，收集有序实参类型，再交给 getCallType。
+// 临时类型数组由本函数分配并释放；实参内部错误在签名匹配之前就能被发现。
 static DataType analyzeCall(
     SemanticContext *context,
     const SyntaxNode *node)
@@ -452,6 +476,8 @@ static DataType analyzeCall(
 }
 
 //递归计算表达式的类型
+// 递归推导表达式 DataType；这是类型分析，不是执行或通用常量求值。
+// Number/LVal/调用由专门函数处理，二元节点先分析两侧，包装层透传孩子类型。
 static DataType analyzeExpression(
     SemanticContext *context,
     const SyntaxNode *node)
@@ -468,6 +494,7 @@ static DataType analyzeExpression(
 
     if (isNode(node, "LVal"))
     {
+        // LVal 的直接 Exp 才是方括号内下标，例如 arr[i+1] 中的 i+1。
         const SyntaxNode *index = findChild(node, "Exp");
         DataType indexType = TYPE_ERROR;
 
@@ -476,6 +503,7 @@ static DataType analyzeExpression(
             indexType = analyzeExpression(context, index);
         }
 
+        // 先递归推导下标类型，再作为第三个参数传入；是否数组由符号表确认。
         return getLValType(context, node, indexType);
     }
 
@@ -545,6 +573,7 @@ static DataType analyzeExpression(
             return analyzeExpression(context, node->children[0]);
         }
 
+        // 二元树的三个直接孩子为：左子表达式、运算符、右子表达式；不是三个值。
         if (node->childCount == 3)
         {
             DataType leftType =
@@ -584,6 +613,7 @@ static DataType analyzeExpression(
 }
 
 //将一项变量、常量或形参定义登记入符号表
+// 登记单个变量、常量或形参；addSymbol 自动填写当前 scopeId 并进行同层查重。
 static void registerDefinition(
     SemanticContext *context,
     const SyntaxNode *definition,
@@ -631,7 +661,9 @@ static void registerDefinition(
     }
 }
 
-//见擦汗数组长度和初始化表达式类型
+//检查数组长度和初始化表达式类型
+// 检查数组长度和初值的类型；变量找 InitVal，常量找 ConstInitVal。
+// 只检查当前实现覆盖的类型规则，不计算数组容量或初始化元素数量上限。
 static void analyzeDefinitionValues(
     SemanticContext *context,
     const SyntaxNode *definition,
@@ -654,6 +686,7 @@ static void analyzeDefinitionValues(
         }
     }
 
+    // 变量 int a=1 的初值节点名为 InitVal；常量 const int a=1 则为 ConstInitVal。
     const SyntaxNode *initializer = findChild(definition, "InitVal");
 
     if (initializer == NULL)
@@ -680,6 +713,8 @@ static void analyzeDefinitionValues(
     }
 
     // 花括号中的每项与元素类型比较，单个表达式与定义类型比较。
+    // 例如 int a[2]={1,2}，每项期望 int（baseType），不是 int[]。
+    // 无花括号时比较整体 definitionType，故 int a[2]=1 能发现 int[] 与 int 不符。
     DataType expectedType = findChild(initializer, "LBRACE") != NULL
                                 ? baseType
                                 : definitionType;
@@ -711,6 +746,7 @@ static void analyzeDefinitionValues(
 }
 
 //分析整个ConstDecl或VarDecl
+// 从 BType 取得基本类型，区分 const/static/普通变量，再按源顺序处理各项定义。
 static void analyzeDeclaration(
     SemanticContext *context,
     const SyntaxNode *declaration)
@@ -741,6 +777,7 @@ static void analyzeDeclaration(
         return;
     }
 
+    // 声明的 BType 决定 int/char；VarDef 内的方括号再决定是否为数组，与初值无关。
     const SyntaxNode *typeNode = findChild(declaration, "BType");
     DataType baseType = getBaseType(typeNode);
 
@@ -760,6 +797,7 @@ static void analyzeDeclaration(
 
         if (isNode(child, definitionName))
         {
+            // 每项先登记再分析初值；前面的声明项可供后项引用，当前不做确定赋值分析。
             registerDefinition(context, child, baseType, kind);
             analyzeDefinitionValues(context, child, baseType);
         }
@@ -767,11 +805,14 @@ static void analyzeDeclaration(
 }
 
 //按顺序分析Block，并根据参数决定是否创建作用域
+// createScope=1 时进入新作用域并在结束时退出；0 表示使用调用者已经创建的作用域。
+// 函数最外层用 0，保证形参与最外层局部变量同层；普通嵌套 Block 用 1。
 static void analyzeBlock(SemanticContext *context,const SyntaxNode *block,int createScope){
     if(context->memoryError || !isNode(block,"Block")){
         return;
     }
 
+    // 进入时新建 Scope 并切换 currentScopeId，后续 addSymbol 会自动记录这个编号。
     if(createScope){
         if(enterScope(context->symbols)==0){
             context->memoryError = 1;
@@ -793,6 +834,7 @@ static void analyzeBlock(SemanticContext *context,const SyntaxNode *block,int cr
 }
 
 //把每个形参作为函数内部的变量登记
+// 将形参名字登记到当前函数作用域，供函数体查找及与局部变量进行同层查重。
 static void registerParameters(SemanticContext *context,const SyntaxNode *parameters){
     if(context->memoryError || !isNode(parameters,"FuncFParams")){
         return;
@@ -818,6 +860,8 @@ static void registerParameters(SemanticContext *context,const SyntaxNode *parame
 }
 
 //提取有序形参类型列表，建立函数签名
+// 按 FuncFParam 顺序建立函数签名的类型数组；这里不登记形参名字。
+// 数组暂由 function 持有，addSymbol 深复制后由 analyzeFunction 释放临时数组。
 static int collectParameterTypes(
     SemanticContext *context,
     const SyntaxNode *parameters,
@@ -887,6 +931,7 @@ static int collectParameterTypes(
 }
 
 //检查赋值两侧类型与常量可修改性
+// 先分析左右表达式，再检查常量修改 h 与赋值类型 e；数组元素类型由 getLValType 得到。
 static void analyzeAssignment(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -901,6 +946,7 @@ static void analyzeAssignment(
                                ? findSymbol(context->symbols, identifier->token->value)
                                : NULL;
 
+    // 先分析右侧，保证即使左侧不可修改，右侧内部独立错误也有机会被记录。
     if (leftType != TYPE_ERROR && symbol != NULL &&
         symbol->kind == SYMBOL_CONST)
     {
@@ -916,6 +962,7 @@ static void analyzeAssignment(
 }
 
 //检查单条return语句与当前函数返回类型是否一致
+// 检查单条 return：void 函数带表达式报 f，非 void 返回类型不符报 e。
 static void analyzeReturn(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -945,6 +992,7 @@ static void analyzeReturn(
 }
 
 //将printf的格式字符映射成期望实参类型
+// 把百分号后的 d/c/s 映射为 int/char/char[]，其他字符返回 TYPE_ERROR。
 static DataType getFormatType(char specifier)
 {
     switch (specifier)
@@ -961,6 +1009,7 @@ static DataType getFormatType(char specifier)
 }
 
 //检查printf的占位符数量和对应实参类型
+// 先检查占位符与直接 Exp 数量 l，再按格式匹配类型 e；仍分析所有实参内部错误。
 static void analyzePrintf(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1054,6 +1103,8 @@ static void analyzePrintf(
 }
 
 //检查非void函数是否以直接的顶层return结束
+// 非 void 函数的最后一个顶层 BlockItem 必须是直接 return，否则在 } 处报 g。
+// 按作业的末条规则检查，不做 if 分支等控制流全路径返回证明。
 static void checkFunctionReturn(
     SemanticContext *context,
     const SyntaxNode *body)
@@ -1073,6 +1124,7 @@ static void checkFunctionReturn(
         }
     }
 
+    // 这里只看最后一个顶层成分：if 两支都 return 仍不是直接的顶层 return。
     const SyntaxNode *lastStatement = findChild(lastItem, "Stmt");
 
     if (findChild(lastStatement, "RETURNTK") == NULL)
@@ -1082,6 +1134,7 @@ static void checkFunctionReturn(
 }
 
 //检查条件表达式是否为标量类型
+// 递归取得条件类型，要求是 int/char 标量；不计算真假，也不据此跳过分支。
 static void analyzeCondition(
     SemanticContext *context,
     const SyntaxNode *condition)
@@ -1095,6 +1148,7 @@ static void analyzeCondition(
 }
 
 //分析while条件，并维护循环嵌套深度
+// 先检查 Cond，再在循环体遍历期间将 loopDepth 加一，离开后减一。
 static void analyzeWhile(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1106,6 +1160,7 @@ static void analyzeWhile(
     context->loopDepth--;
 }
 
+// 检查 Cond，并遍历全部直接 Stmt，覆盖 then 与可选 else 两个分支。
 static void analyzeIf(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1122,6 +1177,7 @@ static void analyzeIf(
 }
 
 //检查break、continue是否处在允许的上下文
+// break 允许在 while 或 switch 中；continue 只允许在 while 中，否则报 m。
 static void analyzeJump(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1142,12 +1198,15 @@ static void analyzeJump(
 }
 
 //把case的Number字面量转换成整数值
+// 将 case 的整数字符串按十进制转换，或将字符/转义字符转成数值以供查重。
+// 只处理 Number 字面量，不对任意 ConstExp 做常量折叠。
 static long long getNumberValue(const SyntaxNode *number)
 {
     const SyntaxNode *integer = findChild(number, "INTCON");
 
     if (integer != NULL)
     {
+        // 将 "123" 转成 long long 值 123；NULL 表示不取停止位置，10 表示十进制。
         return strtoll(integer->token->value, NULL, 10);
     }
 
@@ -1184,6 +1243,8 @@ typedef struct
     long long value;
 } CaseValue;
 
+// 本次调用独立保存 case 的类型/值及 default 标志，检查 e/n 并继续分析分支语句。
+// switch 的花括号不是当前文法的 Block，不自动建作用域；内部真正的 Block 会另行处理。
 static void analyzeSwitch(
     SemanticContext *context,
     const SyntaxNode *statement)
@@ -1212,6 +1273,7 @@ static void analyzeSwitch(
         }
     }
 
+    // 每次调用有自己的标签数组；嵌套 switch 不能与外层共用已出现标签。
     CaseValue *seen = caseCount != 0
                           ? malloc(caseCount * sizeof(CaseValue))
                           : NULL;
@@ -1287,6 +1349,8 @@ static void analyzeSwitch(
             }
         }
 
+        // branch 是 CaseStmt，直接孩子除标签/冒号外还有多条 Stmt。
+        // 标签重复报 n 后仍遍历 Stmt，例如继续发现分支中的未定义名字 c。
         // 每个 switch 独立保存标签；标签出错后仍分析分支中的语句。
         for (size_t j = 0; j < branch->childCount; j++)
         {
@@ -1302,6 +1366,8 @@ static void analyzeSwitch(
 }
 
 //将函数登记、作用域、形参、函数体和返回检查组合起来
+// 先全局登记普通函数签名，再建立函数作用域、登记形参、分析函数体和返回规则。
+// 先登记可支持自递归；没有预扫描登记全部后定义函数，不能等同于支持任意前向调用。
 static void analyzeFunction(
     SemanticContext *context,
     const SyntaxNode *node)
@@ -1387,26 +1453,32 @@ static void analyzeFunction(
         return;
     }
 
+    // 保存共享 context 的旧状态；本函数分析临时改写，退出后恢复调用者环境。
     DataType previousReturnType = context->currentReturnType;
     int previousLoopDepth = context->loopDepth;
     int previousSwitchDepth = context->switchDepth;
 
+    // return 按当前函数声明类型检查；深度归零表示本函数刚开始尚未进入 while/switch。
     context->currentReturnType = returnType;
     context->loopDepth = 0;
     context->switchDepth = 0;
 
     registerParameters(context, parameters);
+    // 前面已 enterScope；传 0 避免重复建层，否则会漏掉形参与外层局部变量同名的 b。
     analyzeBlock(context, body, 0);
     checkFunctionReturn(context, body);
 
     leaveScope(context->symbols);
 
+    // leaveScope 只恢复符号表作用域，不会恢复返回类型和控制深度，须在这里分别还原。
     context->currentReturnType = previousReturnType;
     context->loopDepth = previousLoopDepth;
     context->switchDepth = previousSwitchDepth;
 }
 
 //根据节点类别分派任务，语义树遍历的总调度函数
+// 语义遍历的总分派：命中具体声明/函数/语句后由专门函数处理并立即返回。
+// Decl、BlockItem 等包装层用末尾通用递归展开，避免专门处理后又重复分析子树。
 static void analyzeNode(SemanticContext *context,const SyntaxNode *node){
     if(context->memoryError || node == NULL){
         return;
@@ -1486,6 +1558,8 @@ static void analyzeNode(SemanticContext *context,const SyntaxNode *node){
         return;
     }
 
+    // 例如 Decl → VarDecl，BlockItem → Stmt：当前只是包装层，就递归进入直接孩子。
+    // 专门分支已在上方 return，避免对同一声明重复登记或重复报告错误。
     //展开Decl、BlockItem等节点，继续寻找需要处理的节点
     for (size_t i = 0; i < node->childCount;i++){
         if(context->memoryError){
@@ -1497,6 +1571,7 @@ static void analyzeNode(SemanticContext *context,const SyntaxNode *node){
 }
 
 //登记一个运行库函数签名
+// 将一个库函数作为 isBuiltin=1 的函数符号登记；可查找但最终符号输出会过滤。
 static void registerBuiltin(
     SemanticContext *context,
     char *name,
@@ -1525,8 +1600,10 @@ static void registerBuiltin(
 }
 
 //一次注册当前程序允许调用的运行库函数
+// 在遍历用户程序前预置库函数签名；printf 是专用语句，不作为普通函数在此登记。
 static void registerBuiltins(SemanticContext *context)
 {
+    // 这些局部数组只用于构造签名；addSymbol 深复制后，离开此函数不会悬空。
     DataType intParam[] = {TYPE_INT};
     DataType charParam[] = {TYPE_CHAR};
     DataType stringParam[] = {TYPE_CHAR_ARRAY};
@@ -1555,6 +1632,8 @@ static void registerBuiltins(SemanticContext *context)
         context, "put_string", TYPE_VOID, stringParam, 1);
 }
 
+// 语义入口：全局作用域 1 → 注册库函数 → 遍历 CompUnit → 退出全局。
+// 返回 1 只表示过程完成；源程序是否无错，还要由 main 检查 errors.size。
 int analyzeSemantics(
     SemanticContext *context,
     const SyntaxNode *root)
@@ -1576,5 +1655,6 @@ int analyzeSemantics(
 
     leaveScope(context->symbols);
 
+    // 即使 errors 中记录了 b/c/e 等普通错误，遍历仍可完成并返回 1。
     return !context->memoryError;
 }
