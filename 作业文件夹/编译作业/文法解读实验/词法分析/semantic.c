@@ -946,7 +946,8 @@ static void analyzeAssignment(
                                ? findSymbol(context->symbols, identifier->token->value)
                                : NULL;
 
-    // 先分析右侧，保证即使左侧不可修改，右侧内部独立错误也有机会被记录。
+    // 前面已依次分析左侧和右侧，再检查左侧是否为常量。
+    // 因此即使下面报告 h 并返回，右侧内部的独立错误也已有机会被记录。
     if (leftType != TYPE_ERROR && symbol != NULL &&
         symbol->kind == SYMBOL_CONST)
     {
